@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,12 +19,26 @@ export async function createProfile(formData: FormData) {
     .insert({ id: userId, username, display_name: displayName });
 
   if (error) {
-    // 23505 is the database's code for "that value is already taken".
-    const message =
-      error.code === "23505"
-        ? `@${username} is taken. Try another.`
-        : "Couldn't save your profile. Check the username and try again.";
+    // 23505 means "this would create a duplicate". It can be a duplicate
+    // username (someone else has it) or a duplicate person (you already
+    // have a profile). Only the first one is a real problem.
+    const isDuplicate = error.code === "23505";
+    const usernameTaken = isDuplicate && error.message.includes("username");
+
+    if (isDuplicate && !usernameTaken) {
+      // Your profile already exists, so there's nothing to fix.
+      revalidatePath("/", "layout");
+      redirect("/");
+    }
+
+    const message = usernameTaken
+      ? `@${username} is taken. Try another.`
+      : `Couldn't save your profile (${error.message}).`;
     redirect(`/onboarding?error=${encodeURIComponent(message)}`);
   }
+
+  // Tell the app the home page has changed, so it doesn't reuse an
+  // old copy that still thinks you have no profile.
+  revalidatePath("/", "layout");
   redirect("/");
 }

@@ -16,11 +16,13 @@ export default async function Home() {
   const userId = data?.claims?.sub;
   if (!userId) redirect("/login");
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from("profiles")
     .select("display_name, username")
     .eq("id", userId)
     .maybeSingle();
+  // If the database couldn't be read, say so instead of guessing you're new.
+  if (error) throw new Error(`Couldn't load your profile: ${error.message}`);
   if (!profile) redirect("/onboarding");
 
   return (

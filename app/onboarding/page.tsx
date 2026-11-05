@@ -12,6 +12,14 @@ export default async function OnboardingPage({ searchParams }: PageProps<"/onboa
   const { data } = await supabase.auth.getClaims();
   if (!data?.claims) redirect("/login");
 
+  // Already set up? Skip straight to the home screen.
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("id")
+    .eq("id", data.claims.sub)
+    .maybeSingle();
+  if (existing) redirect("/");
+
   const { error } = await searchParams;
 
   return (
