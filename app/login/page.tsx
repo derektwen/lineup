@@ -26,7 +26,7 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
       ) : (
         <form action={sendSignInLink} className="flex flex-col gap-3">
           <label htmlFor="email" className="text-[#C9C9CF]">
-            Your email
+            Sign in or create an account
           </label>
           <input
             id="email"
@@ -44,10 +44,6 @@ export default async function LoginPage({ searchParams }: PageProps<"/login">) {
             Email me a sign-in link
           </button>
           {error && <p className="text-sm text-[#FF8A8A]">{error}</p>}
-          <p className="text-sm text-[#8A8A93]">
-            New or returning, it&apos;s the same step. We&apos;ll sign you in if you
-            have an account, or create one if you don&apos;t.
-          </p>
         </form>
       )}
     </main>
